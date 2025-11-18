@@ -37,6 +37,7 @@ def login():
     }
     return redirect(f"{AUTH_ENDPOINT}?{urlencode(params)}")
 
+
 @app.route('/callback')
 def callback():
     code = request.args.get('code')
@@ -55,17 +56,29 @@ def callback():
     access_token = token_response.get("access_token")
     id_token = token_response.get("id_token")
 
-    # Get user info
+    # Decode ID Token to inspect claims (without signature verification for testing)
+    import jwt
+    claims = jwt.decode(id_token, options={"verify_signature": False})
+
+    # Build HTML table of claims
+    html = """
+    <h1>OIDC Login Successful</h1>
+    <h2>ID Token Claims:</h2>
+    <table border="1" cellpadding="8" style="border-collapse: collapse;">
+        <tr><th>Claim</th><th>Value</th></tr>
+    """
+    for k, v in claims.items():
+        html += f"<tr><td>{k}</td><td>{v}</td></tr>"
+    html += "</table>"
+
+    # Optionally fetch UserInfo from Microsoft Graph
     headers = {"Authorization": f"Bearer {access_token}"}
     userinfo = requests.get(USERINFO_ENDPOINT, headers=headers).json()
+    html += "<h2>UserInfo:</h2><pre>{}</pre>".format(userinfo)
 
-    return f"""
-    <h1>OIDC Login Successful</h1>
-    <p><strong>ID Token:</strong> {id_token}</p>
-    <h2>User Info:</h2>
-    <pre>{userinfo}</pre>
-    /Back to Home</a>
-    """
+    html += "<br>/Back to Home</a>"
+    return html
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
