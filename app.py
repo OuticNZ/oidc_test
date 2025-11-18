@@ -1,0 +1,71 @@
+import os
+import requests
+from flask import Flask, redirect, request, session, url_for
+from urllib.parse import urlencode
+from dotenv import load_dotenv
+
+load_dotenv()
+app = Flask(__name__)
+app.secret_key = 'supersecretkey'  # Change for production
+
+CLIENT_ID = os.getenv('CLIENT_ID')
+CLIENT_SECRET = os.getenv('CLIENT_SECRET')
+TENANT_ID = os.getenv('TENANT_ID')
+REDIRECT_URI = os.getenv('REDIRECT_URI')
+AUTHORITY = os.getenv('AUTHORITY')
+
+AUTH_ENDPOINT = f"{AUTHORITY}/oauth2/v2.0/authorize"
+TOKEN_ENDPOINT = f"{AUTHORITY}/oauth2/v2.0/token"
+USERINFO_ENDPOINT = "https://graph.microsoft.com/oidc/userinfo"
+
+@app.route('/')
+def index():
+    return """
+    <h1>Welcome to OIDC Test App</h1>
+    /loginLogin with OIDC</a>
+    """
+
+@app.route('/login')
+def login():
+    params = {
+        "client_id": CLIENT_ID,
+        "response_type": "code",
+        "redirect_uri": REDIRECT_URI,
+        "response_mode": "query",
+        "scope": "openid profile email",
+        "state": "12345"
+    }
+    return redirect(f"{AUTH_ENDPOINT}?{urlencode(params)}")
+
+@app.route('/callback')
+def callback():
+    code = request.args.get('code')
+    if not code:
+        return "Error: No code returned"
+
+    # Exchange code for tokens
+    data = {
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+        "grant_type": "authorization_code",
+        "code": code,
+        "redirect_uri": REDIRECT_URI
+    }
+    token_response = requests.post(TOKEN_ENDPOINT, data=data).json()
+    access_token = token_response.get("access_token")
+    id_token = token_response.get("id_token")
+
+    # Get user info
+    headers = {"Authorization": f"Bearer {access_token}"}
+    userinfo = requests.get(USERINFO_ENDPOINT, headers=headers).json()
+
+    return f"""
+    <h1>OIDC Login Successful</h1>
+    <p><strong>ID Token:</strong> {id_token}</p>
+    <h2>User Info:</h2>
+    <pre>{userinfo}</pre>
+    /Back to Home</a>
+    """
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)
