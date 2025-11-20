@@ -43,7 +43,7 @@ def index():
 
 @app.route('/login')
 def login():
-    once = secrets.token_urlsafe(16)
+    nonce = secrets.token_urlsafe(16)
     session['nonce'] = nonce
     return oauth.entra.authorize_redirect(redirect_uri=REDIRECT_URI)
 
