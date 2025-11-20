@@ -42,12 +42,17 @@ def index():
 
 @app.route('/login')
 def login():
+    once = secrets.token_urlsafe(16)
+    session['nonce'] = nonce
     return oauth.entra.authorize_redirect(redirect_uri=REDIRECT_URI)
 
 @app.route('/callback')
 def callback():
-    token = oauth.entra.authorize_access_token()
-    user_info = oauth.entra.parse_id_token(token)
+    token = oauth.entra.authorize_access_token() 
+    nonce = session.get('nonce')
+    user_info = oauth.entra.parse_id_token(token, nonce=nonce)
+    return f"Hello, {user_info.get('name', 'User')}"
+
 
 
 if __name__ == '__main__':
