@@ -34,7 +34,7 @@ def index():
         </html>
     """)
 
-@app.route('/login')
+@app.route('/login/')
 def login():
     params = {
         "client_id": CLIENT_ID,
