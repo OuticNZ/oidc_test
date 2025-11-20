@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from flask import Flask, redirect
+from flask import Flask, redirect, render_template_string
 from authlib.integrations.flask_client import OAuth
 
 # Load environment variables
