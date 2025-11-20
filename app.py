@@ -20,10 +20,19 @@ USERINFO_ENDPOINT = "https://graph.microsoft.com/oidc/userinfo"
 
 @app.route('/')
 def index():
-    return """
-    <h1>Welcome to OIDC Test App</h1>
-    /loginLogin with OIDC</a>
-    """
+    # Landing page with a login button
+    return render_template_string("""
+        <html>
+        <head><title>SAML Test App</title></head>
+        <body style="font-family: Arial; text-align: center; margin-top: 50px;">
+            <h1>Welcome to the SAML Test App</h1>
+            <p>Click below to authenticate via Entra ID:</p>
+            <a href="/login/">
+  	            <button>Click me</button>
+            </a>
+        </body>
+        </html>
+    """)
 
 @app.route('/login')
 def login():
