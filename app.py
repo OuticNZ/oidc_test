@@ -31,7 +31,7 @@ def index():
         <html>
         <head><title>OIDC Test App</title></head>
         <body style="font-family: Arial; text-align: center; margin-top: 50px;">
-            <h1>Welcome to the SAML Test App</h1>
+            <h1>Welcome to the OIDC Test App</h1>
             <p>Click below to authenticate via Entra ID:</p>
             <a href="/login/">
   	            <button>Click me</button>
