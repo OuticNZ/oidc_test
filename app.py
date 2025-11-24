@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from flask import Flask, redirect, render_template_string, session
-from authlib.integrations.flask_client import OAuth
+import msal
 import secrets
 
 # Load environment variables
@@ -12,25 +12,24 @@ CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 TENANT_ID = os.getenv("TENANT_ID")
 REDIRECT_URI = os.getenv("REDIRECT_URI")
 AUTHORITY = os.getenv('AUTHORITY')
+SCOPE = os.getenv("SCOPE").split(
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY')
 
-oauth = OAuth(app)
-oauth.register(
-    name='entra',
-    client_id=CLIENT_ID,
-    client_secret=CLIENT_SECRET,
-    server_metadata_url=f'https://login.microsoftonline.com/{TENANT_ID}/v2.0/.well-known/openid-configuration',
-    client_kwargs={'scope': 'openid profile email'}
-)
+def build_msal_app(cache=None):
+    return msal.ConfidentialClientApplication(
+        CLIENT_ID, authority=AUTHORITY,
+        client_credential=CLIENT_SECRET,
+        token_cache=cache
+    )
 
 @app.route('/')
 def index():
     # Landing page with a login button
     return render_template_string("""
         <html>
-        <head><title>SAML Test App</title></head>
+        <head><title>OIDC Test App</title></head>
         <body style="font-family: Arial; text-align: center; margin-top: 50px;">
             <h1>Welcome to the SAML Test App</h1>
             <p>Click below to authenticate via Entra ID:</p>
@@ -41,20 +40,44 @@ def index():
         </html>
     """)
 
-@app.route('/login')
+
+@app.route("/login")
 def login():
-    nonce = secrets.token_urlsafe(16)
-    session['nonce'] = nonce
-    return oauth.entra.authorize_redirect(redirect_uri=REDIRECT_URI)
-
-@app.route('/callback')
-def callback():
-    token = oauth.entra.authorize_access_token() 
-    nonce = session.get('nonce')
-    user_info = oauth.entra.parse_id_token(token, nonce=nonce)
-    return f"Hello, {user_info.get('name', 'User')}"
+    msal_app = build_msal_app()
+    auth_url = msal_app.get_authorization_request_url(
+        scopes=SCOPE,
+        redirect_uri=REDIRECT_URI
+    )
+    return redirect(auth_url)
 
 
+@app.route("/callback")
+def authorized():
+    code = request.args.get('code')
+    if not code:
+        return "No code returned from Entra ID", 400
+
+    msal_app = build_msal_app()
+    result = msal_app.acquire_token_by_authorization_code(
+        code,
+        scopes=SCOPE,
+        redirect_uri=REDIRECT_URI
+    )
+ 
+    if "id_token_claims" in result:
+        session["user"] = result["id_token_claims"]
+        return f"Hello, {session['user'].get('name', 'User')}"
+
+    return f"Error: {result.get('error_description')}", 400
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(
+        f"https://login.microsoftonline.com/{TENANT_ID}/oauth2/v2.0/logout"
+        f"?post_logout_redirect_uri=http://localhost:5000"
+    )
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
