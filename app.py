@@ -64,9 +64,15 @@ def authorized():
         redirect_uri=REDIRECT_URI
     )
  
+    
     if "id_token_claims" in result:
-        session["user"] = result["id_token_claims"]
-        return f"Hello, {session['user'].get('name', 'User')}"
+        claims = result["id_token_claims"]
+        html = "<h1>ID Token Claims</h1><ul>"
+        for key, value in claims.items():
+            html += f"<li><strong>{key}</strong>: {value}</li>"
+        html += "</ul>"
+        return html
+
 
     return f"Error: {result.get('error_description')}", 400
 
