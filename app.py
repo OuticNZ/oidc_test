@@ -51,7 +51,6 @@ def login():
 def callback():
     token = oauth.entra.authorize_access_token() 
     nonce = session.get('nonce')
-    return f"Hello, {nonce}"
     user_info = oauth.entra.parse_id_token(token, nonce=nonce)
     return f"Hello, {user_info.get('name', 'User')}"
 
