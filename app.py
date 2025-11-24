@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from flask import Flask, redirect, render_template_string, session
+from flask import Flask, redirect, render_template_string, session, request
 import msal
 import secrets
 
