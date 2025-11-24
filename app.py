@@ -33,7 +33,7 @@ def index():
         <body style="font-family: Arial; text-align: center; margin-top: 50px;">
             <h1>Welcome to the OIDC Test App</h1>
             <p>Click below to authenticate via Entra ID:</p>
-            <a href="/login/">
+            <a href="/login">
   	            <button>Click me</button>
             </a>
         </body>
