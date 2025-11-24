@@ -12,7 +12,7 @@ CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 TENANT_ID = os.getenv("TENANT_ID")
 REDIRECT_URI = os.getenv("REDIRECT_URI")
 AUTHORITY = os.getenv('AUTHORITY')
-SCOPE = os.getenv("SCOPE").split(
+SCOPE = os.getenv("SCOPE").split()
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY')
